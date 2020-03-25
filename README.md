@@ -13,3 +13,5 @@ https://www.kaggle.com/sudalairajkumar/novel-corona-virus-2019-dataset
 ![](figs/COVID-19-contagion.gif)	
 
 ![](figs/COVID-19-countireswdeath.gif)
+
+![Watch the video]()](covidcartogram/coronavirusCartogram.mov)
