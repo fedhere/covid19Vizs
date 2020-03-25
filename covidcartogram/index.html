@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>COVID19 Cartogram</title>
+    <meta charset="utf-8">
+    <script src="lib/d3.v2.min.js"></script>
+    <script src="lib/topojson.js"></script>
+    <script src="//d3js.org/d3.geo.projection.v0.min.js"></script>
+    <script src="lib/cartogram.js"></script>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300' rel='stylesheet' type='text/css'>
+    <style type="text/css">
+        body {
+            font-family:'Open Sans', sans-serif;
+            font-weight: 300;
+            font-size: 14px;
+            line-height: 1.4em;
+            padding-top: 20px;
+            margin: 0 auto;
+            width: 600px;
+        }
+        #map-container {
+            height: 500px;
+            
+            position: relative;
+            margin: 10px 0;
+        }
+
+        #map {
+            overflow: visible;
+        }
+        
+       
+         #february15th {
+            color:#888;
+            width: 600px;
+            font-size: 2em;
+            text-align: center;
+            cursor: pointer;
+            padding-top: 20px;
+        }
+        #march1st {
+            color:#888;
+            width: 600px;
+            font-size: 2em;
+            text-align: center;
+            cursor: pointer;
+            padding-top: 30px;
+            
+        }
+         #march15th {
+            color:#888;
+            width: 600px;
+            font-size: 2em;
+            text-align: center;
+            cursor: pointer;
+             padding-top: 30px;
+        }
+        #today {
+            color:#888;
+            width: 600px;
+            font-size: 2em;
+            text-align: center;
+            cursor: pointer;
+            padding-top: 40px;
+        }
+        #reset {
+            color:#888;
+            width: 600px;
+            font-size: 1em;
+            text-align: center;
+            cursor: pointer;
+            padding-top: 40px;
+        }
+        path.munic {
+            stroke: #AAA;
+            stroke-width: .5;
+        }
+        path.munic:hover {
+            stroke: #000;
+        }
+    </style>
+</head>
+
+<body>
+    
+    <div id="february15th" onclick="do_update1()">
+        ...
+    </div>
+    <div id="march1st" onclick="do_update2()">
+        ...
+    </div>
+    <div id="march15th" onclick="do_update3()">
+        ...
+    </div>
+    <div id="today" onclick="do_update4()">
+        ...
+    </div>
+  
+    <div id="map-container">
+        <svg id="map"></svg>
+    </div>
+
+    <script>
+        //the colour scheme for the different winning parties.
+        var colour_map = {
+            "covid": "#4682b4",
+            "pop2": "#4682b4",
+            "": "4682b4"
+        };
+
+
+        var map = d3.select("#map");
+
+        var munics = map.append("g")
+            .attr("id", "munics")
+            .selectAll("path");
+
+        var proj = d3.geo.albers()
+            .origin([0,0])
+            .parallels([-5, 5.1])
+            .scale(200)
+            .translate([300, 300]);
+
+        var topology,
+            geometries,
+            carto_features;
+
+        var vote_data = d3.map();
+
+        var carto = d3.cartogram()
+            .projection(proj)
+            .properties(function (d) {
+                // this add the "properties" properties to the geometries
+                return d.properties;
+            });
+
+         // the data cames from https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Deaths.csv with preprocessing in prepcartogramdata.ipynb
+        d3.csv("data/deaths.csv", function (data) {
+            data.forEach(function (d) {
+                vote_data.set(d.name, [d.feb15,d.mar1,d.mar15,d.today]);
+            });
+        });
+
+         // this loads test the topojson file and creates the map.
+        d3.json("data/world.json", function (data) {
+            topology = data;
+            geometries = topology.objects.world.geometries
+            //countries.geometries;
+            //these 2 below create the map and are based on the topojson implementation
+            var features = carto.features(topology, geometries),
+                path = d3.geo.path()
+                    .projection(proj);
+
+            munics = munics.data(features)
+                .enter()
+                .append("path")
+                .attr("class", "munic")
+                .attr("id", function (d) {
+                    return d.properties.name;
+                })
+                .attr("fill", "#4682b4")
+                      //function(e) {
+                    //return //colour_map[vote_data.get(e.proper//ties.name)];
+                //})
+                .attr("d", path);
+            
+            
+            munics.append("title")
+                .text(function (d) {
+                    return d.properties.name;
+                });
+
+            //d3.select("#reset").text("reset");
+            d3.select("#february15th").text("february 15th");
+            d3.select("#march1st").text("march 1st");
+            d3.select("#march15th").text("march 15th");
+            d3.select("#today").text("today");
+        });
+
+        function do_update1() {
+            d3.select("#february15th").text("...");
+            setTimeout(function () {
+               
+
+                // this sets the value to use for scaling, per munic. Here I used the total number 
+                // of voters per munic. the scaling is relative to the max value.
+                carto.value(function (d) {
+                    //console.log(d.properties["name"]);
+                    return  +vote_data.get(d.properties["name"])[0];
+                });
+                
+                   carto_features = carto(topology, geometries).features;
+
+                //update the map data
+                munics.data(carto_features)
+                    .select("title")
+                    .text(function (d) {
+                        return d.properties.name;
+                    });
+
+                munics.transition()
+                    .duration(750)
+                    .each("end", function () {
+                        d3.select("#february15th").text("february 15th").style("color", "darkred");
+                    })
+                    .attr("d", carto.path);
+                
+//                console.log(carto.path)
+            }, 10);
+        }
+        function do_update2() {
+            d3.select("#march1st").text("...");
+            setTimeout(function () {
+               
+
+                // this sets the value to use for scaling, per munic. Here I used the total number 
+                // of voters per munic. the scaling is relative to the max value.
+                carto.value(function (d) {
+                    //console.log(d.properties["name"]);
+                    return  +vote_data.get(d.properties["name"])[1];
+                });
+                
+                   carto_features = carto(topology, geometries).features;
+
+                //update the map data
+                munics.data(carto_features)
+                    .select("title")
+                    .text(function (d) {
+                        return d.properties.name;
+                    });
+
+                munics.transition()
+                    .duration(750)
+                    .each("end", function () {
+                        d3.select("#march1st").text("march 1st").style("color", "darkred");
+                    })
+                    .attr("d", carto.path);
+                
+                //console.log(carto.path)
+            }, 10);
+        }
+        
+        function do_update3() {
+            d3.select("#march15th").text("...");
+            setTimeout(function () {
+               
+
+                // this sets the value to use for scaling, per munic. Here I used the total number 
+                // of voters per munic. the scaling is relative to the max value.
+                carto.value(function (d) {
+                    console.log(d.properties["name"]);
+                    console.log(vote_data.get(d.properties["name"])[2]);
+                    return  +vote_data.get(d.properties["name"])[2];
+                });
+                
+                   carto_features = carto(topology, geometries).features;
+
+                //update the map data
+                munics.data(carto_features)
+                    .select("title")
+                    .text(function (d) {
+                        return d.properties.name;
+                    });
+
+                munics.transition()
+                    .duration(750)
+                    .each("end", function () {
+                        d3.select("#march15th").text("march 15th").style("color", "darkred");
+                    
+                    })
+                    .attr("d", carto.path);
+                
+               // console.log(carto.path)
+            }, 10);
+        }
+        
+        
+        
+        
+        function do_update4() {
+            
+            d3.select("#today").text("...");
+            setTimeout(function () {
+               
+
+                // this sets the value to use for scaling, per munic. Here I used the total number 
+                // of voters per munic. the scaling is relative to the max value.
+                carto.value(function (d) {
+                    
+                   console.log(d.properties["name"]);return  +vote_data.get(d.properties["name"])[3];
+                });
+                
+                    carto_features = carto(topology, geometries).features;
+
+                //update the map data
+                munics.data(carto_features)
+                    .select("title")
+                    .text(function (d) {
+                        return d.properties.name;
+                    });
+
+                munics.transition()
+                    .duration(750)
+                    .each("end", function () {
+                       d3.select("#today").text("today").style("color", "darkred");
+                    })
+                    .attr("d", carto.path);
+                
+                console.log(carto.path)
+            }, 10);
+        }
+        
+       
+        function do_reset() {
+            d3.select("#reset").text("thinking...");
+            setTimeout(function () {
+               
+
+                // this sets the value to use for scaling, per munic. Here I used the total number 
+                // of voters per munic. the scaling is relative to the max value.
+                carto.value(1);
+                
+                carto_features = carto(topology, geometries).features;
+
+                //update the map data
+                munics.data(carto_features)
+                    .select("title")
+                    .text(function (d) {
+                        return d.properties.name;
+                    });
+
+                munics.transition()
+                    .duration(750)
+                    .each("end", function () {
+                        d3.select("#reset").text("resetting...")
+                    })
+                    .attr("d", carto.path);
+                
+                console.log(carto.path)
+            }, 10);
+        }
+        
+    </script>
+</body>
+
+</html>
