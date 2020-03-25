@@ -14,4 +14,4 @@ https://www.kaggle.com/sudalairajkumar/novel-corona-virus-2019-dataset
 
 ![](figs/COVID-19-countireswdeath.gif)
 
-![D3 animation][http://fbb.space/vizs/covidcartogram/](covidcartogram/coronavirusCartogram.gif)
+![D3 animation](covidcartogram/coronavirusCartogram.gif) - http://fbb.space/vizs/covidcartogram/
