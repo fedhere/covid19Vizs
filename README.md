@@ -8,8 +8,8 @@ https://www.kaggle.com/sudalairajkumar/novel-corona-virus-2019-dataset
 
 
 
-![](csse_covid_19_time_series/COVID-19-2020.gif)
+![](figs/COVID-19-deaths.gif)
 
-![](csse_covid_19_time_series/COVID-19-202_contagion.gif)	
+![](figs/COVID-19-contagion.gif)	
 
-![](csse_covid_19_time_series/COVID-19-202_countries.gif)
+![](figs/COVID-19-countireswdeath.gif)
